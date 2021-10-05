@@ -1,0 +1,11 @@
+target
+.Rproj.user
+.DS_Store
+.Rapp.history
+ProBoundApp/target/
+.metadata/
+.recommenders/
+.settings/
+.synctex.gz
+
+*.swp

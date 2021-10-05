@@ -1,0 +1,9 @@
+{ 
+  "type": "object",
+  "required": [ "modelSettings", "inferredCoefficients"],
+  "properties": {
+
+    "modelSettings": {},
+    "inferredCoefficients": {}
+  }
+}

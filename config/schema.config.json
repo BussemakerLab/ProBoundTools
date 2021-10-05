@@ -1,0 +1,17 @@
+{ 
+  "type": "object",
+  "required": ["optimizerSetting", "modelSettings"],
+  "properties": {
+
+    "optimizerSetting": {},
+
+    "modelSettings": {
+      "type": "object",
+      "required": [ "bindingModes", "countTable" ],
+      "properties": {
+        "bindingModes": { "type": "array" },
+        "countTable":   { "type": "array" }
+      }
+    }
+  }
+}

@@ -1,0 +1,139 @@
+{
+	"type": "array",
+	"items": {
+		"oneOf": [
+			{
+				"type": "object",
+				"required": [],
+	  			"properties": {
+					"function": { "type": "string", "enum": ["addNS", "lbfgsSettings", 
+						"patternSearchSettings", "optimizerSetting", "basicConstraints", "slbfgsSettings", "enrichmentModelSeed" ] }
+				}
+			},
+			{
+				"type": "object",
+				"required": ["function", "index" ],
+				"properties": {
+					"function":             { "type": "string", "enum": [ "enrichmentModelConstraints", "bindingModeConstraints", "interactionConstraints", "NRLBConstraints", "bindingModeSeed" ] },
+					"countTableFile":       { "type": "string" },
+					"variableRegionLength": { "type": "integer"},
+					"nColumns":             { "type": "integer"}
+				}
+			},
+			{
+				"type": "object",
+				"required": ["function", "countTableFile", "variableRegionLength", "nColumns" ],
+				"properties": {
+					"function":             { "type": "string", "enum": [ "addTable" ] },
+					"countTableFile":       { "type": "string"},
+					"variableRegionLength": { "type": "integer"},
+					"nColumns":             { "type": "integer"}
+				}
+			},
+			{
+				"type": "object",
+				"required": ["function", "count_table_id" ],
+				"properties": {
+					"function":             { "type": "string", "enum": [ "addTableDB" ] },
+					"count_table_id":       { "type": "integer"}
+				}
+			},
+			{
+				"type": "object",
+				"required": [ "function", "count_table_ids" ],
+				"properties": {
+					"function":             { "type": "string", "enum": [ "addTableDBs" ] },
+					"count_table_ids":      { "type": "array", "items": {"type": "integer"} }
+				}
+			},
+			{
+				"type": "object",
+				"required": [ "function" ],
+				"properties": {
+					"function":                { "type": "string", "enum": [ "addSELEX" ]      },
+					"modifications":           { "type": "array",  "items": {"type": "string"}  },
+					"rounds":                  { "type": "array",  "items": {"type": "integer"} },
+					"bindingModes":            { "type": "array",  "items": {"type": "integer"} },
+					"bindingModeInteractions": { "type": "array",  "items": {"type": "integer"} }
+				}
+			},
+			{
+				"type": "object",
+				"required": [ "function", "count_table_id" ],
+				"properties": {
+					"function":                { "type": "string", "enum": [ "addSELEXDB" ]     },
+					"count_table_id":          { "type": "integer"}
+				}
+			},
+			{
+				"type": "object",
+				"required": [ "function", "count_table_ids" ],
+				"properties": {
+					"function":                { "type": "string", "enum": [ "addSELEXTableDBs" ] },
+					"count_table_ids":         { "type": "array",  "items": {"type": "integer"}   },
+					"concentrations":          { "type": "array",  "items": {"type": "number"}    }
+				}
+			},
+			{
+				"type": "object",
+				"required": [ "function", "count_table_id" ],
+				"properties": {
+					"function":             { "type": "string", "enum": [ "addSELEXTableDB" ] },
+					"count_table_id":       { "type": "integer"                               },
+					"concentration":        { "type": "number"                                }
+				}
+			},
+			{
+				"type": "object",
+				"required": [ "function", "size" ],
+				"properties": {
+					"function":                { "type": "string", "enum": [ "addBindingMode" ] },
+					"size":                    { "type": "integer"                              }
+				}
+			},
+			{
+				"type": "object",
+				"required": ["function", "bindingModes"],
+				"properties": {
+					"function":     { "type": "string", "enum": [ "addInteraction" ]  },
+					"bindingModes": { "type": "array", "items": [ {"type": "integer"}, {"type": "integer"}] }
+				}
+			},
+			{
+				"type": "object",
+				"required": ["function", "outputPath"],
+				"properties": {
+					"function":   { "type": "string", "enum": [ "output" ]        },
+					"outputPath": { "type": "string"                              },
+					"baseName":   { "type": "string"                              }
+				}
+			},
+			{
+				"type": "object",
+				"required": ["function", "fit_id" ],
+				"properties": {
+					"function": { "type": "string", "enum": ["outputDB"] },
+					"fit_id":   { "type": "integer"                      }
+				}
+			},
+			{
+				"type": "object",
+				"required": ["function", "index" ],
+				"properties": {
+					"function": { "type": "string", "enum": ["symmetry"] },
+					"index":    { "type": "integer"                      },
+					"symmetryString": { "type": "string"                 }
+				}
+			},
+			{
+				"type": "object",
+				"required": ["function", "letterOrder", "letterComplement" ],
+				"properties": {
+					"function":         { "type": "string", "enum": ["setAlphabet"] },
+					"letterComplement": { "type": "string"                          },
+					"letterOrder":      { "type": "string"                          }
+				}
+			}
+		]
+	}
+}

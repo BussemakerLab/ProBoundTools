@@ -1,0 +1,610 @@
+{ 
+  "definitions": {
+
+    "emptyObject": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": { }
+    },
+
+	"enrichmentModelObjectCoefficients": {
+      "type": "object",
+      "description": "Parameters for a single enrichment model object.",
+      "properties": {
+        "rho":   {"type": "array", "items": { "type": "number", "default": 1 } },
+        "gamma": {"type": "array", "items": { "type": "number", "default": 0 } },
+        "delta": {"type": "array", "items": { "type": "number", "default": 0 } }
+      }
+    },
+
+	"countTableObjectCoefficients": {
+       "type": "object",
+       "required": ["h"],
+       "properties": {
+         "h":   {"type": "array", "items": { "type": "number", "default": 1 } }
+       }
+    },
+	
+    "bindingModeObjectCoefficients": {
+      "type": "object",
+      "required": ["mononucleotide"],
+      "properties": {
+        "activity":        { "description": "Binding mode activity. INDEXING: [Experiment][Round]",
+                             "type": "array", "default": [[0]], "items": { 
+                             "type": "array",                   "items": { "type": "number" } } },
+        "mononucleotide":  { "description": "Mononucleotide matrix. INDEXING: [4*x + mono]",
+                             "type": "array",                   "items": { "type": "number" }}, 
+        "dinucleotide":    { "description": "Dinucleotide matrix.   INDEXING: [distance][16*x + di]",
+                             "type": "array", "default": [],    "items": { "type": "array", 
+                                                                "items": { "type": "number" } } },
+        "positionBias":    { "description": "Position bias.         INDEXING: [experiment][strand][x]",
+                             "type": "array", "default": [],    "items": {
+                               "type": "array",                 "items": {
+                                  "type": "array",              "items": {
+                                    "type": "number" } } } },
+        "modifications": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "object",
+            "properties": {
+              "mononucleotide":  { "description": "Mononucleotide modification. INDEXING: [4*x+mono]",
+                                   "type": "array", "default": [],  "items": { "type": "number" } }, 
+              "dinucleotide":    { "description": "Dinucleotide modification. INDEXING: [distance][16*x+di]",
+                                   "type": "array", "default": [],  "items": { "type": "array", 
+                                                                    "items": { "type": "number" } } }
+            }
+          }
+        }
+      }
+    },
+
+    "bindingModeInteractionObjectCoefficients": {
+      "type": "object",
+      "properties": {
+        "activity":          { "description": "Interaction activity. INDEXING: [experiment][round]",
+                               "type": "array", "default": [[0]], "items": { 
+                               "type": "array",                   "items": { "type": "number" } } },
+        "positionMatrix":    { 
+          "description": "Interaction matrix. INDEXING: [experiment][strand1][strand2][x1][x2]",
+          "type": "array", "default": [], "items": { 
+            "type": "array",              "items": { 
+              "type": "array",            "items": { 
+                "type": "array",          "items": { 
+                  "type": "array",        "items": { 
+                    "type": "number" } } } } } },
+
+        "spacingVector":     { 
+          "description": "Interaction spacing vector. INDEXING: [experiment][strand2-strand1][x2-x1]",
+          "type": "array", "default": [], "items": { 
+            "type": "array",              "items": {
+              "type": "array",            "items": {
+                "type": "number" } } } } 
+      }
+    },
+
+    "modelCoefficients": {
+      "description": "Standardized format for binding model coefficients",
+      "type": "object",
+      "required": [ "bindingModes" ],
+      "properties": {
+        "enrichmentModel": {         "type": "array", "items": { "$ref": "#/definitions/enrichmentModelObjectCoefficients"       }                },
+        "countTable": {              "type": "array", "items": { "$ref": "#/definitions/countTableObjectCoefficients"            }                },
+        "bindingModes": {            "type": "array", "items": { "$ref": "#/definitions/bindingModeObjectCoefficients"           }                },
+        "bindingModeInteractions": { "type": "array", "items": { "$ref": "#/definitions/bindingModeInteractionObjectCoefficients"}, "default": [] } 
+      }
+    },
+
+    "modelComponentMetadata": {
+      "description": "Metadata for a model component",
+      "type": "object",
+      "required": [], 
+      "properties": {
+        "componentName":        { "type": "string"  },
+        "includeComponent":     { "type": "boolean" },
+        "variationsOptimized":  { "type": "boolean" },
+        "freezingLevel":        { "type": "integer" },
+        "variationName":        { "type": "string"  },
+        "variationDescription": {
+          "type":            "array",
+          "items": {
+            "type": "object",
+            "required": ["variationName", "descriptionString"],
+            "properties": {
+              "variationName":     { "type": "string" },
+              "descriptionString": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  },
+
+  "type": "object",
+  "required": [ "modelSettings" ],
+  "properties": {
+
+    "modelSettings": {
+      "description": "Settings specifying the binding model and the SELEX enrichment model",
+      "type": "object",
+      "required": [ "bindingModes" ],
+      "properties": {
+
+        "letterComplement":              { "type": "string",  "default": "C-G,A-T", "pattern": "([A-Za-z]-[A-Za-z],?)+?"},
+        "letterOrder":                   { "type": "string", "pattern": "[A-Za-z]+" },
+
+        "enrichmentModel": {
+          "type":            "array", 
+          "minItems":        1,
+          "items": {
+
+            "allOf": [ 
+              { 
+                "type": "object",
+                "description": "Settings that are common to all enrichment models",
+                "required": [ "modelType" ],
+                "default": { "modelType": "SELEX",  "bindingModes": [-1], "bindingModeInteractions": [-1] },
+                "properties": {   
+                  "modelType":             { "type": "string", "default": "SELEX", 
+                                         "enum": ["SELEX", "SELEX_NRLB", "RhoGamma", "Exponential", "ExponentialKinetics"] },
+                  "modifications":         { "type": "array",  "default": [], 
+                                                        "items": { "type": "string" } },
+                  "bindingModes":          { "type": "array",  "default": [-1],
+                                          "description": "Specifies what binding modes are included. [-1] gives all",
+                                          "items": { "type": "number" } },
+                  "bindingModeInteractions": { "type": "array",  "default": [-1],
+                                          "description": "Specifies what interactions are included. [-1] gives all",
+                                          "items": { "type": "number" } },
+                  "concentration":         { "type": "number", "default": 1, "minimum": 0 },
+                  "cumulativeEnrichment":  { "type": "boolean"}
+                }
+              },
+              { 
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "description": "Settings for the cumulative SELEX model",
+                    "default": {},
+                    "properties": {
+                      "modelType":             { "type": "string", "enum": ["SELEX"] },
+                      "bindingSaturation":     { "type": "boolean", "default": false }
+                    }
+                  }, 
+                  {
+                    "type": "object",
+                    "description": "Settings for NRLB",
+                    "default": {},
+                    "required": [ "round" ],
+                    "properties": {
+                      "modelType":             { "type": "string", "enum": ["SELEX_NRLB"] },
+                      "round":                 { "type": "integer", "default": 1, "minimum": 1},
+                      "r0KUsed":               { "type": "integer", "default": 1, "minimum": 1},
+                      "r0KsTested":            { "type": "array", "default": [1], "items": {"type": "number"} }
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "description": "Settings for the power model: alpha^rho*(1+alpha)^gamma",
+                    "default": {},
+                    "properties": {
+                      "modelType":             { "type": "string", "enum": ["RhoGamma"]}
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "description": "Exponential enrichment",
+                    "default": {},
+                    "properties": {
+                      "modelType":             { "type": "string", "enum": ["Exponential"]}
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "description": "Exponential kinetics",
+                    "default": {},
+                    "properties": {
+                      "modelType":             { "type": "string", "enum": ["ExponentialKinetics"]}
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        },
+
+        "countTable": {
+          "type":            "array", 
+          "minItems":        1,
+          "items": {
+            "type": "object",
+            "required": [ "countTableFile", "variableRegionLength", "nColumns" ],
+            "properties": {
+              "countTableFile":  { "type": "string"                                                   },
+              "inputFileType":   { "type": "string",  "default": "tsv"                                },
+              "nColumns":        { "type": "integer", "minimum": 2                                    },
+              "variableRegionLength":
+                                 { "type": "integer", "minimum": 1                                    },
+              "rightFlank":      { "type": "string",  "default": ""                                   },
+              "leftFlank":       { "type": "string",  "default": ""                                   },
+              "modeledColumns":  { "type": "array",   "default": [-1], "items": { "type": "integer" } },
+              "transliterate":   {
+                "type": "object",
+                "required": ["in", "out"],
+                "default": {"in": [], "out": [] },
+                "description": "For each probe, replace each substring matching 'in' with 'out' (C.F. UNIX command 'tr')",
+                "properties": {
+                  "in":          { "type": "array", "default": [], "items": { "type": "string", "minLength": 1 } },
+                  "out":         { "type": "array", "default": [], "items": { "type": "string", "minLength": 1 } }
+                }
+              }
+            }
+          }
+        },
+
+        "bindingModes": {
+          "type": "array", 
+          "items": {
+            "type": "object",
+            "required": [ "size" ],
+            "properties": {
+              "size":                  { "type": "integer",               "minimum": 0 },
+              "flankLength":           { "type": "integer", "default": 0, "minimum": 0 },
+              "dinucleotideDistance":
+                                       { "type": "integer", "default": 0, "minimum": 0 },
+              "positionBias":          { "type": "boolean", "default": false           },
+              "singleStrand":          { "type": "boolean", "default": false           },
+              "fitLogActivity":        { "type": "boolean", "default": true            },
+
+              "modifications": {
+                "type": "array",
+                "default": [],
+                "items": {
+                  "type": "object",
+                  "required": ["name"],
+                  "properties": {
+                    "name":            { "type": "string" }, 
+                    "mononucleotide":  { "type": "array", "default": [], "items": { "type": "string",
+                                                                         "pattern": "[ACGT]" } }, 
+                    "dinucleotide":    { "type": "array", "default": [], "items": { "type": "array", 
+                                                                         "items": { "type": "string",
+                                                                         "pattern": "[ACGT][ACGT]" } } }
+                  }
+                }
+              }
+            }       
+          }
+        },
+
+        "bindingModeInteractions": {
+          "type": "array", 
+          "default": [],
+          "items": {
+            "type": "object",
+            "required": [ "bindingModes" ],
+            "properties": {
+              "bindingModes":{ "type": "array",   "items": [{"type": "integer", "minimum": 0}, 
+                                                            {"type": "integer", "minimum": 0}] },
+              "positionBias":{ "type": "boolean",  "default": false                            },
+              "maxOverlap":  { "type": "integer",  "default":  0, "minimum":  0                },
+              "maxSpacing":  { "type": "integer",  "default": -1, "minimum": -1                },
+              "fitLogActivity": { "type": "boolean", "default": true                           }
+            }
+          }
+        }
+      }
+    },
+
+
+    "modelFittingConstraints": {
+      "description": "Strategy for identifying the optimal modes and enrichment model",
+      "type": "object",
+      "properties": {
+
+        "addBindingModesSequentially": { "type": "boolean", "default":true                                        },
+        "flankLengths":                { "type": "array",   "default":[0], "items": { "type": "number" },
+                                                                                        "description": "For NRLB" },
+        "nShifts":                     { "type": "integer", "default": 0, "minimum": 0, "description": "For NRLB" },
+        "singleModeLengthSweep":       { "type": "boolean", "default": false,           "description": "For NRLB" },
+
+        "enrichmentModel": {
+          "type": "array",
+          "default": [{}],
+          "items": {
+            "type": "object",
+            "default": {},
+            "properties": {
+              "fitRho":                { "type": "boolean", "default": false },
+              "fitGamma":              { "type": "boolean", "default": false },
+              "fitDelta":              { "type": "array", "default": [false], "items": { "type": "boolean" } },
+              "roundSpecificRho":      { "type": "boolean", "default": true  },
+              "roundSpecificGamma":    { "type": "boolean", "default": true  }, 
+              "roundSpecificDelta":    { "type": "boolean", "default": true  }, 
+			  "trySaturation":         { "type": "boolean", "default": false }
+            }
+          }
+        },
+
+        "bindingModes": {
+          "type": "array", 
+          "default": [],
+          "items": {
+            "type": "object",
+            "properties": {
+              "positionBiasBinWidth":  { "type": "integer", "default": 1,    "minimum": 1 },
+
+              "optimizeSize":          { "type": "boolean", "default": false,
+                   "description": "Optimizes the size by expanding to the left and right" },
+              "optimizeFlankLength":   { "type": "boolean", "default": false,
+                   "description": "Optimizes the the flank length by testing increases"   },
+              "optimizeSizeHeuristic": { "type": "boolean", "default": false,
+                   "description": "Expands both to the left and right and flank length."  },
+              "optimizeMotifShift":    { "type": "boolean", "default": false,
+                   "description": "Optimizes the shift of the motif"                      },
+              "optimizeMotifShiftHeuristic": 
+                                       { "type": "boolean", "default": false,
+                   "description": "Tests shifting the motif so that the information is centred."},
+
+              "fittingStages":         { "type": "array", "default": [],
+                "items": {
+                  "optimizeSize":                { "type": "boolean", "default": false    },
+                  "optimizeSizeHeuristic":       { "type": "boolean", "default": false    },
+                  "optimizeFlankLength":         { "type": "boolean", "default": false    },
+                  "optimizeMotifShift":          { "type": "boolean", "default": false    },
+                  "optimizeMotifShiftHeuristic": { "type": "boolean", "default": false    }
+                }
+              },
+              "symmetryString":        { "type": "string",  "default": "null",
+                      "description": "FORMAT1: id1:L:isSym|id2:L:isSym. FORMAT2: abcdDCBA"},
+
+              "roundSpecificActivity": { "type": "boolean", "default": true               },
+              "experimentSpecificPositionBias":
+                                       { "type": "boolean", "default": true              },
+              "experimentSpecificActivity":
+                                       { "type": "boolean", "default": true               },
+              "minSize":               { "type": "integer", "default": -1, "minimum": -1, "description": "For NRLB" },
+              "maxSize":               { "type": "integer", "default": -1, "minimum": -1 },
+              "maxFlankLength":        { "type": "integer", "default": -1, "minimum": -1 }, 
+              "informationThreshold":  { "type": "number",  "default": 0.1, "minimum": 0, 
+                "description": "Minimum information required for optimizeSizeHeuristic to expand footprint" }
+            }
+          }
+        },
+
+        "bindingModeInteractions": {
+          "type": "array", 
+          "default": [],
+          "items": {
+            "type": "object",
+            "properties": {
+              "roundSpecificActivity":         { "type": "boolean", "default": true      },
+              "experimentSpecificInteraction": { "type": "boolean", "default": false     },
+              "experimentSpecificActivity":    { "type": "boolean", "default": true      } }
+          }
+        }
+      }
+    },
+
+
+    "optimizerSetting": {
+      "description": "Numerical and I/O settings of the regression software",
+      "type": "object",
+      "required": [ "output" ],
+      "properties": {
+
+        "minimizerType":   { "type": "string", "default": "lbfgs",
+                                                   "enum": ["lbfgs", "patternSearch", "sgd", "slbfgs", "slbfgs_pls"] },
+
+        "lbfgsSettings": {
+          "type": "object",
+          "default": {},
+          "properties": {
+            "memory":        { "type": "integer", "default": 100, "minimum": 1       },
+            "maxIters":      { "type": "integer", "default": 500, "minimum": 10      },
+            "convergence":   { "type": "number",  "default": 1e-7                    },
+            "MCSearch":      { "type": "boolean", "default": true                    }
+          }
+        },
+
+        "patternSearchSettings": {
+          "type": "object",
+          "default": {},
+          "properties": {
+            "initStep":      { "type": "number",  "default": 1                       },
+            "theta":         { "type": "number",  "default": 0.5                     },
+            "convergence":   { "type": "number",  "default": 1e-8                    },
+            "randomAxis":    { "type": "boolean", "default": false                   }
+          }
+        },
+
+        "sgdSettings": {
+          "type": "object",
+          "default": {},
+          "properties": {
+            "method":        { "type": "string",  "default": "Adam", "enum": ["Adam"]},
+            "batchSize":     { "type": "integer", "default": 128                     },
+            "learningRate":  { "type": "number",  "default": 0.001                   },
+            "convergence":   { "type": "number",  "default": 1e-8                    },
+            "maxIters":      { "type": "integer", "default": 500, "minimum": 10      },
+            "adaptive":      { "type": "array",   "default": [0.9, 0.999], 
+                                                       "items": { "type": "number" } }
+          }
+        },
+
+        "slbfgsSettings": {
+          "type": "object",
+          "default": {},
+          "properties": {
+            "gradientBatch":     { "type": "integer",  "default": 500,   "minimum": 1 },
+            "hessianBatch":      { "type": "integer",  "default": 5000,  "minimum": 1 },
+            "memorySize":        { "type": "integer",  "default": 50,    "minimum": 1 },
+            "maxEpoch":          { "type": "integer",  "default": 1000,  "minimum": 1 },
+            "hessianPeriod":     { "type": "integer",  "default": 20,    "minimum": 2 },
+            "epochIterations":   { "type": "integer",  "default": 200                 },
+            "stepsize":          { "type": "number",   "default": 0.03                },
+            "convergence":       { "type": "number",   "default": 1e-7                },
+            "delta":             { "type": "number",   "default": 0.00,  "minimum": 0 },
+            "dirEMARate":        { "type": "number",   "default": 0.1,   "minimum": 0 },
+            "maxDirGrowth":      { "type": "number",   "default": 2.718282,"minimum":1},
+            "dirNormBound":      { "type": "number",   "default": 10,    "minimum": 0 }
+          }
+        },
+
+        "slbfgs_plsSettings": {
+          "type": "object",
+          "default": {},
+          "properties": {
+            "gradientBatch":     { "type": "integer",  "default": 500,   "minimum": 1 },
+            "hessianBatch":      { "type": "integer",  "default": 5000,  "minimum": 1 },
+            "memorySize":        { "type": "integer",  "default": 50,    "minimum": 1 },
+            "maxEpoch":          { "type": "integer",  "default": 1000,  "minimum": 1 },
+            "hessianPeriod":     { "type": "integer",  "default": 20,    "minimum": 2 },
+            "epochIterations":   { "type": "integer",  "default": 200                 },
+            "stepsize":          { "type": "number",   "default": 0.03                },
+            "convergence":       { "type": "number",   "default": 1e-7                },
+            "delta":             { "type": "number",   "default": 0.00,  "minimum": 0 },
+            "dirEMARate":        { "type": "number",   "default": 0.1,   "minimum": 0 },
+            "maxDirGrowth":      { "type": "number",   "default": 2.718282,"minimum":1},
+            "dirNormBound":      { "type": "number",   "default": 10,    "minimum": 0 },
+
+            "etaEMARate":        { "type": "number",   "default": 0.1,   "minimum": 0 },
+            "etaGrowthRate":     { "type": "number",   "default": 1.005, "minimum":1},
+            "maxEtaBound":       { "type": "number",   "default": 100,   "minimum": 0 },
+            "c1":                { "type": "number",   "default": 0.0001,"minimum": 0 },
+            "c2":                { "type": "number",   "default": 0.999, "minimum": 0 },
+            "WolfeThreshold":    { "type": "number",   "default": 0.1,   "minimum": 0 }
+          }
+        },
+
+		"hkSettings": {
+			"type": "object",
+			"default": {},
+			"properties": {
+				"kickAll":    { "type": "boolean", "default": false, "description": "Applies hessian kicking after each binding mode or interaction." },
+				"kickFinal":  { "type": "boolean", "default": false, "description": "Applies hessian kicking to the final model." },
+                "evCutoff":   { "type": "number",  "default": 1e-9                                  },
+                "epsilon":    { "type": "number",  "default": 1e-7                                  },
+                "maxIters":   { "type": "integer", "default": 200                                   },
+                "fdDelta":    { "type": "number",  "default": 1e-4                                  }
+
+			}
+		},
+
+        "lambdaL2":          { "type": "number",  "default": 1e-7                    },
+        "pseudocount":       { "type": "number",  "default": 0                       },
+        "nThreads":          { "type": "integer", "default": 4,   "minimum": 1       },
+		"nRetries":          { "type": "integer", "default": 3                       }, 
+        "likelihoodThreshold": { "type": "number",  "default": 0.0, "minimum": 0, 
+          "description": "Minimum likelihood improvement required to accept variation of model." }, 
+		"fixedLibrarySize":  { "type": "boolean", "default": false, "description": "Indicates if the random batches keep the column sums fixed"}, 
+		"expBound":          { "type": "number",  "default": 40, "minimum": 0        },
+
+        "output": {
+          "type": "object",
+          "properties": {
+            "outputPath":      { "type": "string"                    },
+            "baseName":        { "type": "string"                    },
+            "verbose":         { "type": "boolean", "default": false },
+            "storeHessian":    { "type": "boolean", "default": false },
+            "printPSAM":       { "type": "boolean", "default": false },
+            "printTrajectory": { "type": "boolean", "default": false }
+          }
+        }
+      }
+    },
+
+
+    "metadata": {
+      "description": "Metadata generated by the optimizer",
+      "type": "object",
+      "properties": {
+        "optimizer" : {
+          "type": "object",
+          "properties": {
+            "index":                { "type": "integer" },
+            "timeStamp":            { "type": "string"  },
+            "fitter":               { "type": "string"  },
+            "fitName":              { "type": "string"  },
+            "fitTime":              { "type": "number"  },
+            "fitSteps":             { "type": "integer" },
+            "functionCalls":        { "type": "integer" },
+            "gradientCalls":        { "type": "integer" },
+            "logLikelihood":        { "type": "number"  },
+            "logLikelihoodPerRead": { "type": "number"  },
+            "regularization":       { "type": "number"  }
+          }
+        },
+        "bindingMode": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "allOf": [
+              { "$ref": "#/definitions/modelComponentMetadata" },
+              {
+                "type": "object",
+                "properties": { "currentShift": { "type": "integer" } }
+              }
+            ]
+          }
+        },
+        "bindingModeInteractions": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "$ref": "#/definitions/modelComponentMetadata"
+          }
+        },
+        "enrichmentModel": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "$ref": "#/definitions/modelComponentMetadata"
+          }
+        },
+        "countTable": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "$ref": "#/definitions/modelComponentMetadata"
+          }
+        } 
+      }
+    },
+
+
+    "coefficients": { 
+      "description": "Model coefficients estimated by the regression software.",
+      "$ref": "#/definitions/modelCoefficients"
+    },
+
+
+    "modelError": {
+      "description": "Estimates of the errors in the coefficient estimates.",
+      "$ref": "#/definitions/modelCoefficients"
+    },
+
+    "modelSeeding": {
+      "description": "Specification of the seeding used.",
+      "type": "object",
+      "properties": {
+        "enrichmentModel": {         "type": "array", "items": { "type": "object", "properties": { 
+              "rho":                   { "type": "array", "items": { "type": "number"} },
+              "gamma":                 { "type": "array", "items": { "type": "number"} }
+        } } }, 
+        "countTable": {              "type": "array", "items": { "type": "object" } },
+        "bindingModes": {            "type": "array", "items": { "type": "object", "properties": { 
+              "mononucleotideFile":    { "type": "string" },
+              "mononucleotideIUPAC":   { "type": "string" },
+              "mononucleotideString":  { "type": "string" },
+              "seedScale":             { "type": "number", "default": 1.0 }
+        } } },
+        "bindingModeInteractions": { "type": "array", "items": { "type": "object" } }
+      }
+    },
+
+    "scoringModel": { 
+      "description": "Binding model that can be used for scoring sequences.",
+      "$ref": "#/definitions/modelCoefficients"
+    }
+  }
+}
+
