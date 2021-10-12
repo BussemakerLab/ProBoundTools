@@ -112,7 +112,7 @@ public class App {
 			else if(func.equals("inputTXT"))                     t.inputTXT(arg);                
 			else if(func.equals("loadScoringModel"))             t.loadScoringModel(arg);        
 			else if(func.equals("loadFitLine"))                  t.loadFitLine(arg);            
-//			else if(func.equals("loadMotifCentralModel"))        t.loadMotifCentralModel(arg);
+			else if(func.equals("loadMotifCentralModel"))        t.loadMotifCentralModel(arg);
 			else if(func.equals("writeModel"))                   t.writeModel(arg);             
 			else if(func.equals("setMismatchGauge"))             t.setMismatchGauge(arg);        
 			else if(func.equals("buildConsensusModel"))          t.buildConsensusModel(arg);    
@@ -181,7 +181,7 @@ public class App {
 		System.out.println("-------------------------------------");
 		t.loadScoringModel(          (ArrayList<String>)null);
 		t.loadFitLine(               (ArrayList<String>)null);
-//		t.loadMotifCentralModel(     (ArrayList<String>)null);
+		t.loadMotifCentralModel(     (ArrayList<String>)null);
 		
 		System.out.println("");
 		System.out.println("Functions for manipulating binding models:");

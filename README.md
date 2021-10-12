@@ -10,5 +10,5 @@ cd ..
 
 To run ProBoundTools, run:
 
-java -cp ProBoundTools/target/ProBound-jar-with-dependencies.jar proBoundTools/App -c 'loadFitLine(demo/fit.16273.json).addNScoring().inputTXT(demo/initialPool.30mer1.R0.txt).bindingModeScores(/dev/stdout)'
+java -cp ProBoundTools/target/ProBound-jar-with-dependencies.jar proBoundTools/App -c 'loadMotifCentralModel(15413).addNScoring().inputTXT(demo/initialPool.30mer1.R0.txt).bindingModeScores(/dev/stdout)'
 

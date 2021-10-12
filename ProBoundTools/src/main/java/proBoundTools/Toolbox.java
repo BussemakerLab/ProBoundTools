@@ -2788,7 +2788,7 @@ public class Toolbox {
 	}
 	
 	//Loads model from the MotifCentral database
-/*	public void loadMotifCentralModel(ArrayList<String> args) {
+	public void loadMotifCentralModel(ArrayList<String> args) {
 		if(args==null) {
 			System.out.println("loadMotifCentralModel(fit_id)     - Loads a model with from motifcentral.org");
 			return;
@@ -2797,7 +2797,7 @@ public class Toolbox {
 
 		if(nArgs==1) {
 			int fit_id = Integer.parseInt(args.get(0));
-			loadScoringModelDB(fit_id, generalSchemaFile);
+			loadMotifCentralModel(fit_id);
 		} else {
 			error("The function motifCentralModel(fit_id) must have exactly one argument.");
 		}
@@ -2806,8 +2806,8 @@ public class Toolbox {
 	
 	public void loadMotifCentralModel(int fitID) {
 		
-
-		String sURL = "http://sasquatch.biology.columbia.edu/~cellx/test.json"; //just a string
+		String sURL ="https://prod-gateway.motifcentral.org/cellx/api/web/utility/fit/"+String.format("%d", fitID);
+		System.out.println(sURL);
 
 	    // Connect to the URL using java's native library
 		String scoringJSON = null;
@@ -2846,5 +2846,5 @@ public class Toolbox {
 		//Loads the model.
 		loadOModel();
 		
-	}*/
+	}
 }
