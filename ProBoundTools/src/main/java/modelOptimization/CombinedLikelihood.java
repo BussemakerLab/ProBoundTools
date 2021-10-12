@@ -322,65 +322,6 @@ public class CombinedLikelihood extends LossFunction{
 	@Override
 	public void lossFunction_updateValue() {
 		
-		if(valueUpdated)
-			return;
-		value         = 0;
-		logLikelihood = 0;
-		
-		if(computeVariance)
-			valueVariance = 0;
-
-		for(int iTable=0; iTable<tableModels.size(); iTable++) {
-			CountTable table         = tableModels.get(iTable);
-			if(table.includeComponent) {
-				try {
-					table.updateValue();
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-				double meanFunctionValue = table.functionValue * table.weight;
-				value           += meanFunctionValue;
-				logLikelihood   += table.functionValue;
-				
-				if(computeVariance) {
-					//TODO: Q: Is the function value and gradient normalized by the number of reads??
-					double meanFunctionValueSquared = table.functionValueSquared * table.weight;
-					valueVariance += meanFunctionValueSquared - meanFunctionValue * meanFunctionValue;
-				}
-			}
-		}
-		
-		//Adds regularization (to value, not to logLikelihoodPerRead and to logLikelihood).
-		//TODO: Check what regularization is best.
-		JSONObject oReg = getJSONState();
-
-		double L2Sum = ModelComponent.trJSONObject_O(ModelComponent.multiplyJSONObject_O(oReg.getJSONObject("coefficients"), oReg.getJSONObject("coefficients")));
-		double regularizationTerm = 0;
-		
-		//L2 regularization
-		regularizationTerm       += lambdaL2*L2Sum;
-		
-		//Dirichlet 
-		for(BindingMode bm: bindingModes)
-			if(bm.includeComponent)
-				regularizationTerm += bm.getDirichletValue(pseudocount);
-		
-		//Exponential bounding term: Exp[value-expBound] + Exp[-value-expBound]
-		regularizationTerm       += Array.sum(Array.exp(Array.add(     ModelComponent.constant_d(parameters, -expBound), parameters)))
-						       	  + Array.sum(Array.exp(Array.subtract(ModelComponent.constant_d(parameters, -expBound), parameters)));
-		
-		value += regularizationTerm;
-		
-		logLikelihoodPerRead = value;
-		
-		functionCalls += 1;
-		dataLoops     += 1.0 * this.lossFunction_getBatchSize() / this.lossFunction_getDataSize();
-		valueUpdated   = true; 
-		
-
-		
-		
-		
 	}
 
 	

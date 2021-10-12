@@ -650,35 +650,6 @@ public class CountTable extends ModelComponent  {
 		}
 	}		
 
-	// Functions for launch threads for computing function value and the gradient
-	/////////////////////////////////////////////////////////////////////////////
-	
-	//Updates the value.
-	public void updateValue() throws InterruptedException, ExecutionException {
-		
-		functionValue               = 0;
-		if(computeVariance)
-			functionValueSquared    = 0;  
-		List<Future<JSONObject>> threadOutput;
-		Set<Callable<JSONObject>> tasks = new HashSet<Callable<JSONObject>>(nThreads);
-		JSONObject threadResult;
-		
-		//Assign Threads
-		for (int i=0; i<nThreads; i++) 
-			if(threadRange[i][0]!= -1)
-				tasks.add(new ThreadedFunctionEvaluator(threadRange[i][0], threadRange[i][1]));
-
-		//Launch Threads
-		threadOutput = pool.invokeAll(tasks);
-		//Sum up value and return
-		for (Future<JSONObject> currentThread : threadOutput) {
-			threadResult   = currentThread.get();
-			functionValue -= threadResult.getDouble("functionValue");
-			if(computeVariance) {
-				functionValueSquared += threadResult.getDouble("functionValueSquared");
-			}
-		}
-	}
 
 	private void computePRI(double[] pRI, double[] kappaRI, double[] deltaKappaRI) {
 		
@@ -1049,74 +1020,6 @@ public class CountTable extends ModelComponent  {
 		return out;
 	}
 	
-	
-	public class ThreadedFunctionEvaluator implements Callable<JSONObject>{
-		private int startIdx;
-		private int endIdx;
-		
-		public ThreadedFunctionEvaluator(int startIdx, int endIdx) {
-			this.startIdx				= startIdx;
-			this.endIdx					= endIdx;
-		}
-		
-		
-		//@Override
-		public JSONObject call() throws Exception {
-			
-			int nRounds                   = batchCountPerRound.length;
-
-			double[] alphaSeq             = new double[enr.nModes];
-			double[] alphaInt             = new double[enr.nInteractions];
-			double[] alphaRI              = new double[nRounds];
-			ArrayList<ArrayList<ArrayList<Double>>> longAlphaList 
-			                              = new ArrayList<ArrayList<ArrayList<Double>>>(); 
-			for(int bm=0; bm<enr.nModes; bm++)
-				longAlphaList.add(null);
-
-			double[] deltaKappaRI         = new double[nRounds];
-			double[] kappaRI              = new double[nRounds];
-			double[] pRI                  = new double[nRounds];
-			
-			ArrayList<SlidingWindow> sw = new ArrayList<SlidingWindow>();
-			for(int bm=0; bm<enr.nModes; bm++)
-				sw.add(enr.bindingModes.get(bm).getSlidingWindow(iComp, enr.modifications));
-
-			double functionValue          = 0.0;
-			double functionValueSquared   = 0.0;
-			
-			//Loops over probes.
-			if(startIdx!=-1) {
-				for(int i=startIdx; i<endIdx; i++) {
-
-					//Updates alpha values.
-					enr.computeAlphas(sw, alphaSeq, alphaInt, alphaRI, longAlphaList, longProbes.get(batchProbeIndices.get(i)));
-												  
-					//Calculates deltaKappa:
-					enr.updateDeltaKappaRI(deltaKappaRI, alphaRI, nRounds);
-					
-					//Computes pRI.
-					computePRI(pRI, kappaRI, deltaKappaRI);
-				
-					double probeValue = 0;
-					for(int r: modeledColumns) 
-						probeValue += batchProbeCounts.get(i)[r] * Math.log(pRI[r]);
-					
-					functionValue        += probeValue;
-					functionValueSquared += probeValue*probeValue;
-					
-
-				}
-			}
-			
-			
-			JSONObject outObject = new JSONObject();
-			outObject.put("functionValue",        functionValue);
-			outObject.put("functionValueSquared", functionValueSquared);
-			
-			return outObject;
-		}
-	}
-
 	static public void printJSONObjectCoefficients(JSONObject model, String coefficientKey, int iExp) {
 		
 		JSONObject oTable = model.getJSONObject(coefficientKey).getJSONArray("countTable").getJSONObject(iExp);
